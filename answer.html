@@ -58,6 +58,17 @@
         height: 30px;
         padding: 0.25rem;
       }
+      /* Chrome, Safari, Edge, Opera */
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      /* Firefox */
+      input[type="number"] {
+        -moz-appearance: textfield;
+      }
     </style>
   </head>
   <body>
@@ -217,7 +228,7 @@
           $("#calc-questions").append(
             `<div class="row">
                 <div class="col-6">${qObj.question}</div>
-                <div class="col-6"><input class="form-control form-control-sm math-input" data-answer="${qObj.answer}" /></div>
+                <div class="col-6"><input class="form-control form-control-sm math-input" type="number" data-answer="${qObj.answer}" /></div>
             </div>`
           );
         }
@@ -229,7 +240,7 @@
         for (var r = 0; r < 20; r++) {
           scaleHtml += "<tr>";
           for (var c = 0; c < 4; c++) {
-            scaleHtml += `<td><input class="form-control form-control-sm scale-cell" id="scale-${
+            scaleHtml += `<td><input class="form-control form-control-sm scale-cell" type="number" id="scale-${
               20 * c + (r + 1)
             }" /></td>`;
           }
@@ -298,10 +309,7 @@
 
             numbersSkipped += shifted - 1;
 
-            if (
-              firstValue === Number(cell.val()) ||
-              (preGeneratedNumbers.length > 0 && cell.val() !== "")
-            ) {
+            if (firstValue === Number(cell.val())) {
               cell.addClass("bg-success").addClass("text-light");
               correctNumbers++;
             }
