@@ -338,17 +338,16 @@
               continue;
             }
             const cell = $(`.grid-cell[data-text='${g}']`);
-            const text = cell.data("text");
             let firstValue;
             let shifted = 0;
             do {
               firstValue = preGeneratedTexts.shift();
               shifted++;
-            } while (preGeneratedTexts.length > 0 && firstValue !== text);
+            } while (preGeneratedTexts.length > 0 && firstValue !== g);
 
             gridsSkipped += shifted - 1;
 
-            if (firstValue === text) {
+            if (firstValue === g) {
               cell.removeClass("bg-warning").addClass("bg-success");
               correctGrids++;
             }
