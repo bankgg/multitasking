@@ -317,7 +317,7 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
         for (var i = 0; i <= 100; i++) {
           preGeneratedNumbers.push(i);
         }
-        preGeneratedNumbers = _.shuffle(preGeneratedNumbers)
+        preGeneratedNumbers = _.shuffle(preGeneratedNumbers);
         // Encode the arrays into a JSON string and then Base64 encode it.
         var dataToEncode = {
           preGeneratedTexts: preGeneratedTexts,
@@ -328,20 +328,23 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
       }
 
       // --- Check for "q" in URL; if missing, generate and encode arrays ---
-      var qParam = getQueryParam("q");
-      if (qParam) {
-        try {
-          var decoded = decodeData(qParam);
-          if (decoded.preGeneratedTexts && decoded.preGeneratedNumbers) {
-            preGeneratedTexts = decoded.preGeneratedTexts;
-            preGeneratedNumbers = decoded.preGeneratedNumbers;
+      $(document).ready(function () {
+        var qParam = getQueryParam("q");
+        if (qParam) {
+          try {
+            var decoded = decodeData(qParam);
+
+            if (decoded.preGeneratedTexts && decoded.preGeneratedNumbers) {
+              preGeneratedTexts = decoded.preGeneratedTexts;
+              preGeneratedNumbers = decoded.preGeneratedNumbers;
+            }
+          } catch (e) {
+            console.error("Error decoding q param", e);
           }
-        } catch (e) {
-          console.error("Error decoding q param", e);
+        } else {
+          generatePreGeneratedValues();
         }
-      } else {
-        generatePreGeneratedValues();
-      }
+      });
 
       // Global flags for pausing movement
       var arrowPaused = false;
