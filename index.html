@@ -436,7 +436,7 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
         var diamondHeight = $("#white-diamond").height();
         // Allowed vertical range: from ~26% to ~74% of blue box height.
         var minAllowed = 0.26 * blueBoxHeight;
-        var maxAllowed = 0.74 * blueBoxHeight - diamondHeight;
+        var maxAllowed = 0.74 * blueBoxHeight;
         var currentTop =
           parseFloat($("#white-diamond").css("top")) || blueBoxHeight / 2;
         var target = Math.random() * (maxAllowed - minAllowed) + minAllowed;
