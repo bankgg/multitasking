@@ -283,7 +283,7 @@
         });
 
         $("#submit-btn").click(function () {
-          let numbersSkipped = 0;
+          let scalesSkipped = 0;
           let gridsSkipped = 0;
           let correctScales = 0;
           let correctGrids = 0;
@@ -293,6 +293,9 @@
           let wrongMath = 0;
 
           $(".math-input").each(function (idx) {
+            if ($(this).val() === "") {
+              return;
+            }
             if (Number($(this).val()) === $(this).data("answer")) {
               $(this).addClass("bg-success").addClass("text-light");
               correctMath++;
@@ -318,7 +321,7 @@
               shifted++;
             } while (preGeneratedNumbers.length > 0 && firstValue !== val);
 
-            numbersSkipped += shifted - 1;
+            scalesSkipped += shifted - 1;
 
             if (firstValue === val) {
               cell.addClass("bg-success").addClass("text-light");
@@ -344,20 +347,15 @@
 
             gridsSkipped += shifted - 1;
 
-            if (
-              firstValue.toLowerCase() === cell.data("text").toLowerCase() ||
-              preGeneratedTexts.length > 0
-            ) {
+            if (firstValue.toLowerCase() === cell.data("text").toLowerCase()) {
               cell.removeClass("bg-warning").addClass("bg-success");
               correctGrids++;
-            } else {
-              gridsSkipped = 0;
             }
           }
 
           showAlert(
             `Correct Math: ${correctMath}<br />Wrong Math: ${wrongMath}<br /><br />
-            Correct Scale: ${correctScales}<br />Wrong Scale: ${wrongScales}<br />Skipped Scale: ${numbersSkipped}<br /><br />
+            Correct Scale: ${correctScales}<br />Wrong Scale: ${wrongScales}<br />Skipped Scale: ${scalesSkipped}<br /><br />
             Correct Grid: ${correctGrids}<br />Wrong Grid: ${wrongGrids}<br />Skipped Grid: ${gridsSkipped}`
           );
         });
