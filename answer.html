@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Answer Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css"
+    />
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/fflate@0.8.2"></script>
+    <style>
+      /* Optional custom styles */
+      h3 {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+      }
+      /* Ensure inputs and buttons fill their cells nicely */
+      .form-control {
+        /* height: 20px; */
+        font-size: 0.65rem;
+      }
+      .grid-btn {
+        padding: 0;
+        height: 40px;
+      }
+      /* Fix table cell heights for the 16x16 grid */
+      #grid-table td,
+      #grid-table th {
+        vertical-align: middle;
+        text-align: center;
+      }
+      /* Adjust the SCALE table so inputs fill the cell */
+      #scale-table input {
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .table-borderless td {
+        padding: 0;
+      }
+
+      #calc-questions {
+        font-size: 1rem;
+      }
+
+      #grid-table {
+        table-layout: fixed;
+        width: 100%;
+      }
+
+      #grid-table td,
+      #grid-table th {
+        height: 30px;
+        padding: 0.25rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container my-3">
+      <!-- First Row -->
+      <div class="row">
+        <!-- CALCULATE Column -->
+        <div class="col-md-4">
+          <div class="row">
+            <!-- Left Sub-Column: Questions -->
+            <div class="col-12" id="calc-questions">
+              <!-- 20 rows of math questions will be inserted here -->
+            </div>
+          </div>
+        </div>
+        <!-- SCALE Column -->
+        <div class="col-md-8" id="scale-column">
+          <table class="table table-borderless" id="scale-table">
+            <tbody>
+              <!-- 20 rows × 4 columns will be generated here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Second Row: 16x16 Grid -->
+      <div class="row mt-2">
+        <div class="col-12">
+          <table class="table table-bordered text-center" id="grid-table">
+            <thead>
+              <tr>
+                <th></th>
+                <!-- X-axis headers: P, O, N, ..., A -->
+              </tr>
+            </thead>
+            <tbody>
+              <!-- 16 rows will be generated here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <button class="btn btn-sm btn-block btn-primary" id="submit-btn">
+          Submit
+        </button>
+      </div>
+    </div>
+
+    <script>
+      let preGeneratedTexts = [];
+      let preGeneratedNumbers = [];
+      const gridAnswers = [];
+
+      function decodeData(encoded) {
+        const raw = window.atob(encoded);
+        const array = Uint8Array.from(raw, (c) => c.charCodeAt(0));
+        const unzip = fflate.inflateSync(array);
+        const ascii = new TextDecoder().decode(unzip);
+        return JSON.parse(decodeURIComponent(ascii));
+      }
+
+      function getQueryParam(name) {
+        var params = new URLSearchParams(window.location.search);
+        return params.get(name);
+      }
+
+      $(document).ready(function () {
+        var qParam = getQueryParam("q");
+        if (qParam) {
+          try {
+            var decoded = decodeData(qParam);
+            if (decoded.preGeneratedTexts && decoded.preGeneratedNumbers) {
+              preGeneratedTexts = decoded.preGeneratedTexts;
+              preGeneratedNumbers = decoded.preGeneratedNumbers;
+            //   console.log(preGeneratedNumbers, preGeneratedTexts);
+            }
+          } catch (e) {
+            alert("Invalid data!");
+            $(".container").hide();
+          }
+        } else {
+          alert("Invalid data!");
+          $(".container").hide();
+        }
+        // -----------------------------
+        // Generate CALCULATE Questions & Inputs
+        // -----------------------------
+        var numQuestions = 20;
+        // Function to generate a random two-digit number (10-99)
+        function rand2Digit() {
+          return Math.floor(Math.random() * 90) + 10;
+        }
+        // Function to generate a random math question.
+        function generateQuestion() {
+          // Choose randomly among 3 operations: 0 = addition, 1 = subtraction, 2 = multiplication.
+          var op = Math.floor(Math.random() * 3);
+          var a = rand2Digit();
+          var b = rand2Digit();
+          if (op === 0) {
+            return { question: a + " + " + b + " =", answer: a + b };
+          } else if (op === 1) {
+            // Ensure non-negative result: let a be the larger.
+            if (a < b) {
+              var temp = a;
+              a = b;
+              b = temp;
+            }
+            return { question: a + " - " + b + " =", answer: a - b };
+          } else {
+            return { question: a + " × " + b + " =", answer: a * b };
+          }
+        }
+
+        // Generate and append questions and inputs.
+        for (var i = 0; i < numQuestions; i++) {
+          var qObj = generateQuestion();
+          $("#calc-questions").append(
+            `<div class="row">
+                <div class="col-6">${qObj.question}</div>
+                <div class="col-6"><input class="form-control form-control-sm math-input" data-answer="${qObj.answer}" /></div>
+            </div>`
+          );
+        }
+
+        // -----------------------------
+        // Generate SCALE 4x20 Grid
+        // -----------------------------
+        var scaleHtml = "";
+        for (var r = 0; r < 20; r++) {
+          scaleHtml += "<tr>";
+          for (var c = 0; c < 4; c++) {
+            scaleHtml += `<td><input class="form-control form-control-sm scale-cell" id="scale-${
+              20 * c + (r + 1)
+            }" /></td>`;
+          }
+          scaleHtml += "</tr>";
+        }
+        $("#scale-table tbody").html(scaleHtml);
+
+        // -----------------------------
+        // Generate 16x16 Grid with Headers
+        // -----------------------------
+        // X-axis headers: Letters from P to A (16 letters)
+        var letters = "PONMLKJIHGFEDCBA".split("");
+        var headerHtml = "<th></th>"; // top-left corner blank
+        for (var i = 0; i < letters.length; i++) {
+          headerHtml += "<th>" + letters[i] + "</th>";
+        }
+        $("#grid-table thead tr").html(headerHtml);
+
+        // Y-axis: numbers 16 down to 1
+        var gridBodyHtml = "";
+        for (var row = 16; row >= 1; row--) {
+          gridBodyHtml += "<tr>";
+          gridBodyHtml += "<th>" + row + "</th>";
+          for (var col = 0; col < 16; col++) {
+            // Each cell contains a button that when clicked, turns green.
+            gridBodyHtml += `<td class="grid-cell" data-text="${String.fromCharCode(
+              80 - col
+            )}${row}">&nbsp;</td>`;
+          }
+          gridBodyHtml += "</tr>";
+        }
+        $("#grid-table tbody").html(gridBodyHtml);
+
+        // -----------------------------
+        // Add click event handler to grid buttons
+        // -----------------------------
+        $(".grid-cell").click(function () {
+          $(this).addClass("bg-warning");
+          gridAnswers.push($(this).data("text"));
+        });
+
+        $("#submit-btn").click(function () {
+          $(".math-input").each(function (idx) {
+            if (Number($(this).val()) === $(this).data("answer")) {
+              $(this).addClass("bg-success").addClass("text-light");
+            }
+          });
+
+          let numbersSkipped = 0;
+          for (let i = 1; i <= 80; i++) {
+            const cell = $(`#scale-${i}`)
+            let firstValue;
+            let shifted = 0;
+            do {
+              firstValue = preGeneratedNumbers.shift();
+              shifted++
+            } while (cell.val() !== '' && preGeneratedNumbers.length > 0 && firstValue !== Number(cell.val()));
+
+            numbersSkipped += shifted - 1
+
+            if (preGeneratedNumbers.length > 0 && cell.val() !== '') {
+                cell.addClass("bg-success").addClass("text-light");
+            }
+          }
+
+          let gridsSkipped = 0;
+          for (const g of gridAnswers) {
+            const cell = $(`.grid-cell[data-text="${g}"]`)
+            let firstValue;
+            let shifted = 0;
+            do {
+              firstValue = preGeneratedTexts.shift();
+              shifted++
+            } while (preGeneratedTexts.length > 0 && firstValue !== cell.data('text'));
+
+            gridsSkipped += shifted - 1
+
+            if (preGeneratedTexts.length > 0) {
+                cell.removeClass('bg-warning').addClass("bg-success");
+            }
+          }
+
+          alert('Skipped Numbers: ' + numbersSkipped + ' / Skipped Texts: ' + gridsSkipped)
+        });
+      });
+    </script>
+  </body>
+</html>

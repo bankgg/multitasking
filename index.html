@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Multitasking Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css"
+    />
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/fflate@0.8.2"></script>
+    <script src="
+https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
+"></script>
+
+    <style>
+      /* Main container limited to 1600px */
+      .main-container {
+        max-width: 1600px;
+        margin: 0 auto;
+      }
+      /* --------------------------
+       LEFT COLUMN (col-md-2)
+       -------------------------- */
+      /* UP/DOWN box: 300px tall, full width */
+      #up-down-box {
+        margin-top: 50px;
+        width: 100%;
+        border: 1px solid #000;
+      }
+      #up-box,
+      #down-box {
+        height: 90px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+      }
+      #up-box {
+        background-color: blue;
+        color: white;
+      }
+      #down-box {
+        background-color: #e0f0ff;
+        color: black;
+      }
+      /* Scale and red arrow row below UP/DOWN box */
+      .scale-container {
+        border: 1px solid #999;
+        padding: 5px;
+        box-sizing: border-box;
+      }
+      .scale-label {
+        border-bottom: 1px solid #000;
+        padding: 2px 0;
+        text-align: center;
+      }
+      .scale-labels {
+        font-size: 1.7rem;
+        text-align: center;
+      }
+      /* Red arrow styling – a left-pointing arrow using clip-path */
+      #red-arrow {
+        position: absolute;
+        left: -40%;
+        width: 150%;
+        height: 50px;
+        background: red;
+        cursor: pointer;
+        clip-path: polygon(0% 50%, 25% 0%, 100% 0%, 100% 100%, 25% 100%);
+        /* We insert a number inside when paused */
+      }
+      /* --------------------------
+       RIGHT COLUMN (col-md-10)
+       -------------------------- */
+      /* Runway image: full width of the column */
+      #runway-image {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+      /* Lower row: three columns */
+      #blue-box {
+        height: 280px;
+        width: 90%;
+        background-color: #8ea8d8;
+        position: relative;
+      }
+      /* Two thick horizontal lines inside the blue box */
+      #blue-box .line {
+        position: absolute;
+        width: 70%;
+        left: 15%;
+        height: 8px;
+        background-color: rgb(0, 18, 98);
+      }
+      #blue-box .top-line {
+        top: 25%;
+      }
+      #blue-box .bottom-line {
+        bottom: 25%;
+      }
+      /* White diamond (true diamond shape) inside blue box */
+      #white-diamond {
+        width: 230px;
+        height: 25px;
+        background: white;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      }
+      /* Circle (red by default) with fixed dimensions */
+      #color-circle {
+        width: 85%;
+        height: 85%;
+        background-color: red;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        cursor: pointer;
+      }
+      #action-buttons {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        z-index: 9999;
+      }
+      #action-buttons button {
+        margin-left: 5px;
+      }
+      #toast-container {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 1050;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container main-container">
+      <div class="row">
+        <!-- Left Column: 2 of 12 columns -->
+        <div class="col-md-2">
+          <!-- UP/DOWN box (full width) -->
+          <div class="row">
+            <div class="col-12">
+              <div id="up-down-box">
+                <div id="up-box">UP</div>
+                <div id="down-box">DOWN</div>
+              </div>
+            </div>
+          </div>
+          <!-- Scale and Red Arrow: split into 2 columns -->
+          <div class="row mt-5">
+            <div class="col-8">
+              <div id="scale-wrapper">
+                <div class="scale-container">
+                  <div class="scale-labels">
+                    <div class="scale-label">-100-</div>
+                    <div class="scale-label">--90--</div>
+                    <div class="scale-label">--80--</div>
+                    <div class="scale-label">--70--</div>
+                    <div class="scale-label">--60--</div>
+                    <div class="scale-label">--50--</div>
+                    <div class="scale-label">--40--</div>
+                    <div class="scale-label">--30--</div>
+                    <div class="scale-label">--20--</div>
+                    <div class="scale-label">--10--</div>
+                    <div class="scale-label">--0--</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div id="red-arrow"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Right Column: 10 of 12 columns -->
+        <div class="col-md-10">
+          <!-- Top Row: Runway image full width -->
+          <div class="row">
+            <div class="col-12">
+              <img id="runway-image" src="runway.png" alt="Runway" />
+            </div>
+          </div>
+          <!-- Bottom Row: 3 columns -->
+          <div class="row mt-5">
+            <!-- Blank column: 2 of 12 -->
+            <div class="col-md-2"></div>
+            <!-- Blue box: 6 of 12 -->
+            <div class="col-md-6">
+              <div id="blue-box">
+                <div class="line top-line"></div>
+                <div class="line bottom-line"></div>
+                <div id="white-diamond"></div>
+              </div>
+            </div>
+            <!-- Circle: 4 of 12 -->
+            <div class="col-md-4">
+              <div id="color-circle"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div id="action-buttons">
+      <button id="btn-generate" class="btn btn-sm btn-primary">Generate</button>
+      <button id="btn-start" class="btn btn-sm btn-success">Start</button>
+      <button id="btn-copy" class="btn btn-sm btn-secondary">
+        Copy Link to Answer Sheet
+      </button>
+    </div>
+
+    <!-- Toast Container -->
+    <div
+      id="toast-container"
+      style="position: fixed; top: 1rem; right: 1rem; z-index: 1050"
+    >
+      <div
+        id="toast-generate"
+        class="toast bg-success text-white"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+        data-delay="3000"
+      >
+        <div
+          class="toast-body d-flex justify-content-between align-items-center"
+        >
+          <span id="toast-value"></span>
+          <button
+            type="button"
+            class="close text-white ml-2"
+            data-dismiss="toast"
+            aria-label="Close"
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- Global arrays & indices for pre-generated values ---
+      var overallPaused = false;
+      var preGeneratedTexts = [];
+      var preGeneratedNumbers = [];
+      var textIndex = 0;
+      var numberIndex = 0;
+
+      function pauseAll() {
+        overallPaused = true;
+        arrowPaused = true;
+        diamondPaused = true;
+        // Stop the arrow and diamond animations immediately.
+        $("#red-arrow").stop(true);
+        $("#white-diamond").stop(true);
+        // (Optional) You could also clear any pending timeouts if you store their IDs.
+      }
+
+      // Resume all movements: clear flags and re-launch the animations.
+      function resumeAll() {
+        overallPaused = false;
+        arrowPaused = false;
+        diamondPaused = false;
+        randomArrowMove();
+        scheduleArrowPause();
+        randomDiamondMove();
+        scheduleDiamondPause();
+        scheduleCircleChange();
+      }
+
+      // Helper to get a query parameter
+      function getQueryParam(name) {
+        var params = new URLSearchParams(window.location.search);
+        return params.get(name);
+      }
+      // Helper to set/update a query parameter without reloading
+      function setQueryParam(name, value) {
+        var params = new URLSearchParams(window.location.search);
+        params.set(name, value);
+        window.history.replaceState({}, "", "?" + params.toString());
+      }
+
+      // --- Helper: Generate pre-generated values ---
+      function generatePreGeneratedValues() {
+        preGeneratedTexts = [];
+        preGeneratedNumbers = [];
+        textIndex = 0;
+        numberIndex = 0;
+        // Generate 100 texts: random capital letter (A-P) + number between 1 and 16.
+        for (var i = 0; i < 100; i++) {
+          let text = "";
+          do {
+            var letter = String.fromCharCode(
+              65 + Math.floor(Math.random() * 16)
+            );
+            var num = Math.floor(Math.random() * 16) + 1;
+            text = letter + num;
+          } while (preGeneratedTexts.some((t) => t === text));
+
+          preGeneratedTexts.push(text);
+        }
+        // Generate numbers 0 through 100.
+        for (var i = 0; i <= 100; i++) {
+          preGeneratedNumbers.push(i);
+        }
+        // Encode the arrays into a JSON string and then Base64 encode it.
+        var dataToEncode = {
+          preGeneratedTexts: preGeneratedTexts,
+          preGeneratedNumbers: _.shuffle(preGeneratedNumbers),
+        };
+        var encoded = encodeData(dataToEncode);
+        setQueryParam("q", encoded);
+      }
+
+      // --- Check for "q" in URL; if missing, generate and encode arrays ---
+      var qParam = getQueryParam("q");
+      if (qParam) {
+        try {
+          var decoded = decodeData(qParam);
+          if (decoded.preGeneratedTexts && decoded.preGeneratedNumbers) {
+            preGeneratedTexts = decoded.preGeneratedTexts;
+            preGeneratedNumbers = decoded.preGeneratedNumbers;
+          }
+        } catch (e) {
+          console.error("Error decoding q param", e);
+        }
+      } else {
+        generatePreGeneratedValues();
+      }
+
+      // Global flags for pausing movement
+      var arrowPaused = false;
+      var diamondPaused = false;
+
+      // -------------------------
+      // Arrow Movement Functionality
+      // -------------------------
+      function randomArrowMove(optionalTargetPercent, completeFunc, duration) {
+        if (arrowPaused) return;
+        var scaleWrapperHeight = $("#scale-wrapper").height();
+        var arrowHeight = $("#red-arrow").height();
+        var currentTop = parseFloat($("#red-arrow").css("top")) || 0;
+        var maxMove = scaleWrapperHeight - arrowHeight;
+        var target;
+
+        // If optionalTargetPercent is provided and is between 0 and 100, use it.
+        if (
+          typeof optionalTargetPercent === "number" &&
+          optionalTargetPercent >= 0 &&
+          optionalTargetPercent <= 100
+        ) {
+          target = (optionalTargetPercent / 100) * maxMove;
+        } else {
+          // Otherwise, choose a random target.
+          target = Math.random() * maxMove;
+        }
+
+        var distance = Math.abs(target - currentTop);
+
+        // Random speed between 200 and 400 pixels per second.
+        var minSpeed = 200;
+        var maxSpeed = 400;
+        var speed = Math.random() * (maxSpeed - minSpeed) + minSpeed;
+
+        // Duration (in ms) proportional to distance/speed, with a minimum.
+        var computedDuration = duration ?? (distance / speed) * 1000;
+        var duration = Math.max(computedDuration, 300);
+
+        $("#red-arrow").animate(
+          { top: target + "px" },
+          duration,
+          "linear",
+          function () {
+            if (!arrowPaused) {
+              // Continue with random movement if no specific target was passed.
+              randomArrowMove();
+            } else {
+              if (completeFunc) {
+                completeFunc();
+              }
+            }
+          }
+        );
+      }
+
+      function scheduleArrowPause() {
+        var pauseDelay = getRandomInterval(); // using our custom random interval function
+        setTimeout(function () {
+          var number = preGeneratedNumbers[numberIndex];
+          numberIndex = (numberIndex + 1) % preGeneratedNumbers.length;
+          randomArrowMove(
+            100 - number,
+            function () {
+              $("#red-arrow").html(
+                '<span style="color: white; font-size: 2rem; margin-left: 35px; margin-top: 10px;">' +
+                  number +
+                  "</span>"
+              );
+            },
+            300
+          );
+          arrowPaused = true;
+          //   $("#red-arrow").stop(true);
+          var scaleWrapperHeight = $("#scale-wrapper").height();
+          var arrowHeight = $("#red-arrow").height();
+          var currentTop = parseFloat($("#red-arrow").css("top")) || 0;
+          setTimeout(function () {
+            $("#red-arrow").html("");
+            arrowPaused = false;
+            randomArrowMove();
+            scheduleArrowPause();
+          }, 3300);
+        }, pauseDelay);
+      }
+
+      // -------------------------
+      // Diamond Movement Functionality
+      // -------------------------
+      function randomDiamondMove() {
+        if (diamondPaused) return;
+        var blueBoxHeight = $("#blue-box").height();
+        var diamondHeight = $("#white-diamond").height();
+        // Allowed vertical range: from ~26% to ~74% of blue box height.
+        var minAllowed = 0.26 * blueBoxHeight;
+        var maxAllowed = 0.74 * blueBoxHeight - diamondHeight;
+        var currentTop =
+          parseFloat($("#white-diamond").css("top")) || blueBoxHeight / 2;
+        var target = Math.random() * (maxAllowed - minAllowed) + minAllowed;
+        var distance = Math.abs(target - currentTop);
+
+        // Random speed between 90 and 200 pixels per second.
+        var minSpeed = 90;
+        var maxSpeed = 200;
+        var speed = Math.random() * (maxSpeed - minSpeed) + minSpeed;
+
+        var computedDuration = (distance / speed) * 1000;
+        var duration = Math.max(computedDuration, 300);
+
+        $("#white-diamond").animate(
+          { top: target + "px" },
+          duration,
+          "linear",
+          function () {
+            if (!diamondPaused) {
+              randomDiamondMove();
+            }
+          }
+        );
+      }
+
+      function scheduleDiamondPause() {
+        var pauseDelay = getRandomInterval();
+        setTimeout(function () {
+          diamondPaused = true;
+          $("#white-diamond").stop(true);
+          var blueBoxHeight = $("#blue-box").height();
+          var diamondHeight = $("#white-diamond").height();
+          var target =
+            Math.random() < 0.5 ? diamondHeight : blueBoxHeight - diamondHeight;
+          $("#white-diamond").animate(
+            { top: target + "px" },
+            1000,
+            "linear",
+            function () {
+              diamondPaused = false;
+              randomDiamondMove();
+              scheduleDiamondPause();
+            }
+          );
+        }, pauseDelay);
+      }
+
+      // -------------------------
+      // Circle Change Functionality
+      // -------------------------
+      function scheduleCircleChange() {
+        var interval = getRandomInterval();
+        setTimeout(function () {
+          $("#color-circle").css("background-color", "green");
+          // Use the pre-generated text from the array.
+          var text = preGeneratedTexts[textIndex];
+          textIndex = (textIndex + 1) % preGeneratedTexts.length;
+          $("#color-circle").text(text);
+          setTimeout(function () {
+            $("#color-circle").text("");
+            $("#color-circle").css("background-color", "red");
+            scheduleCircleChange();
+          }, 3000);
+        }, interval);
+      }
+
+      // -------------------------
+      // Helper: Random Interval Function
+      // -------------------------
+      function getRandomInterval() {
+        // 90% probability: 10-20 sec, 10% probability: 5-9 or 21-30 sec.
+        if (Math.random() < 0.9) {
+          return (Math.random() * 10 + 10) * 1000;
+        } else {
+          if (Math.random() < 0.5) {
+            return (Math.random() * 4 + 5) * 1000;
+          } else {
+            return (Math.random() * 9 + 21) * 1000;
+          }
+        }
+      }
+
+      // Encode with compression:
+      function encodeData(data) {
+        var jsonStr = JSON.stringify(data);
+        const ascii = encodeURIComponent(jsonStr);
+        const array = new TextEncoder().encode(ascii);
+        const zip = fflate.deflateSync(array, { level: 9 });
+        return window.btoa(String.fromCharCode(...zip));
+      }
+
+      // Decode with decompression:
+      function decodeData(encoded) {
+        const raw = window.atob(encoded);
+        const array = Uint8Array.from(raw, (c) => c.charCodeAt(0));
+        const unzip = fflate.inflateSync(array);
+        const ascii = new TextDecoder().decode(unzip);
+        return JSON.parse(decodeURIComponent(ascii));
+      }
+
+      // -------------------------
+      // Button Event Handlers
+      // -------------------------
+      $("#btn-generate").click(function () {
+        generatePreGeneratedValues();
+        $("#toast-value").text("Values have been re-generated.");
+        $("#toast-generate").toast("show");
+      });
+
+      $("#btn-copy").click(function () {
+        var currentUrl = window.location.href;
+        // Replace "index.html" with "answer.html" if it exists.
+        var newUrl = currentUrl.replace("index.html", "answer.html");
+        // Use the Clipboard API (if available)
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(newUrl).then(
+            function () {
+              $("#toast-value").text("Link copied to clipboard!");
+              $("#toast-generate").toast("show");
+            },
+            function (err) {
+              alert("Error copying link: " + err);
+            }
+          );
+        } else {
+          // Fallback for older browsers: create a temporary input element.
+          var tempInput = $("<input>");
+          $("body").append(tempInput);
+          tempInput.val(newUrl).select();
+          document.execCommand("copy");
+          tempInput.remove();
+          alert("Link copied to clipboard:\n" + newUrl);
+        }
+      });
+
+      $("#btn-start").click(function () {
+        if ($(this).text() === "Start") {
+          resumeAll();
+          $(this).text("Pause");
+        } else if (!overallPaused) {
+          pauseAll();
+          $(this).text("Resume");
+        } else {
+          resumeAll();
+          $(this).text("Pause");
+        }
+      });
+    </script>
+  </body>
+</html>
