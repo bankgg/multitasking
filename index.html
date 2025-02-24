@@ -317,10 +317,11 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
         for (var i = 0; i <= 100; i++) {
           preGeneratedNumbers.push(i);
         }
+        preGeneratedNumbers = _.shuffle(preGeneratedNumbers)
         // Encode the arrays into a JSON string and then Base64 encode it.
         var dataToEncode = {
           preGeneratedTexts: preGeneratedTexts,
-          preGeneratedNumbers: _.shuffle(preGeneratedNumbers),
+          preGeneratedNumbers: preGeneratedNumbers,
         };
         var encoded = encodeData(dataToEncode);
         setQueryParam("q", encoded);
