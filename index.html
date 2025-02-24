@@ -512,10 +512,10 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
       // -------------------------
       function getRandomInterval() {
         // 90% probability: 10-20 sec, 10% probability: 5-9 or 21-30 sec.
-        if (Math.random() < 0.85) {
+        if (Math.random() < 0.8) {
           return (Math.random() * 10 + 10) * 1000;
         } else {
-          if (Math.random() < 0.5) {
+          if (Math.random() < 0.7) {
             return (Math.random() * 4 + 5) * 1000;
           } else {
             return (Math.random() * 9 + 21) * 1000;
