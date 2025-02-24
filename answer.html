@@ -103,6 +103,42 @@
           Submit
         </button>
       </div>
+
+      <!-- Bootstrap Alert Modal -->
+      <div
+        class="modal fade"
+        id="alertModal"
+        tabindex="-1"
+        role="dialog"
+        aria-labelledby="alertModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="alertModalLabel">Result</h5>
+              <button
+                type="button"
+                class="close"
+                data-dismiss="modal"
+                aria-label="Close"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-dismiss="modal"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -131,7 +167,7 @@
             if (decoded.preGeneratedTexts && decoded.preGeneratedNumbers) {
               preGeneratedTexts = decoded.preGeneratedTexts;
               preGeneratedNumbers = decoded.preGeneratedNumbers;
-            //   console.log(preGeneratedNumbers, preGeneratedTexts);
+              console.log(preGeneratedNumbers, preGeneratedTexts);
             }
           } catch (e) {
             alert("Invalid data!");
@@ -148,6 +184,11 @@
         // Function to generate a random two-digit number (10-99)
         function rand2Digit() {
           return Math.floor(Math.random() * 90) + 10;
+        }
+
+        function showAlert(message) {
+          $("#alertModal .modal-body").html(message);
+          $("#alertModal").modal("show");
         }
         // Function to generate a random math question.
         function generateQuestion() {
@@ -238,40 +279,62 @@
           });
 
           let numbersSkipped = 0;
+          let gridsSkipped = 0;
+          let correctNumbers = 0;
+          let correctGrids = 0;
+
           for (let i = 1; i <= 80; i++) {
-            const cell = $(`#scale-${i}`)
+            const cell = $(`#scale-${i}`);
             let firstValue;
             let shifted = 0;
             do {
               firstValue = preGeneratedNumbers.shift();
-              shifted++
-            } while (cell.val() !== '' && preGeneratedNumbers.length > 0 && firstValue !== Number(cell.val()));
+              shifted++;
+            } while (
+              cell.val() !== "" &&
+              preGeneratedNumbers.length > 0 &&
+              firstValue !== Number(cell.val())
+            );
 
-            numbersSkipped += shifted - 1
+            numbersSkipped += shifted - 1;
 
-            if (preGeneratedNumbers.length > 0 && cell.val() !== '') {
-                cell.addClass("bg-success").addClass("text-light");
+            if (
+              firstValue === Number(cell.val()) ||
+              (preGeneratedNumbers.length > 0 && cell.val() !== "")
+            ) {
+              cell.addClass("bg-success").addClass("text-light");
+              correctNumbers++;
             }
           }
 
-          let gridsSkipped = 0;
           for (const g of gridAnswers) {
-            const cell = $(`.grid-cell[data-text="${g}"]`)
+            const cell = $(`.grid-cell[data-text="${g}"]`);
             let firstValue;
             let shifted = 0;
             do {
               firstValue = preGeneratedTexts.shift();
-              shifted++
-            } while (preGeneratedTexts.length > 0 && firstValue !== cell.data('text'));
+              shifted++;
+            } while (
+              preGeneratedTexts.length > 0 &&
+              firstValue.toLowerCase() !== cell.data("text").toLowerCase()
+            );
 
-            gridsSkipped += shifted - 1
+            gridsSkipped += shifted - 1;
 
-            if (preGeneratedTexts.length > 0) {
-                cell.removeClass('bg-warning').addClass("bg-success");
+            if (
+              firstValue.toLowerCase() === cell.data("text").toLowerCase() ||
+              preGeneratedTexts.length > 0
+            ) {
+              cell.removeClass("bg-warning").addClass("bg-success");
+              correctGrids++;
+            } else {
+              gridsSkipped = 0;
             }
           }
 
-          alert('Skipped Numbers: ' + numbersSkipped + ' / Skipped Texts: ' + gridsSkipped)
+          showAlert(
+            `Correct Scale: ${correctNumbers}<br />Skipped Scale: ${numbersSkipped}<br /><br />Correct Grid: ${correctGrids}<br />Skipped Grid: ${gridsSkipped}`
+          );
         });
       });
     </script>
