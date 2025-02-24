@@ -278,6 +278,9 @@
         // Add click event handler to grid buttons
         // -----------------------------
         $(".grid-cell").click(function () {
+          if (gridAnswers.some((g) => g === this.data("text"))) {
+            return;
+          }
           $(this).addClass("bg-warning");
           gridAnswers.push($(this).data("text"));
         });
