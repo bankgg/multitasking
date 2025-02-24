@@ -283,39 +283,54 @@
         });
 
         $("#submit-btn").click(function () {
+          let numbersSkipped = 0;
+          let gridsSkipped = 0;
+          let correctScales = 0;
+          let correctGrids = 0;
+          let wrongScales = 0;
+          let wrongGrids = 0;
+          let correctMath = 0;
+          let wrongMath = 0;
+
           $(".math-input").each(function (idx) {
             if (Number($(this).val()) === $(this).data("answer")) {
               $(this).addClass("bg-success").addClass("text-light");
+              correctMath++;
+            } else {
+              wrongMath++;
             }
           });
 
-          let numbersSkipped = 0;
-          let gridsSkipped = 0;
-          let correctNumbers = 0;
-          let correctGrids = 0;
-
           for (let i = 1; i <= 80; i++) {
             const cell = $(`#scale-${i}`);
+            if (cell.val() === "") {
+              continue;
+            }
+            const val = Number(cell.val());
+            if (!preGeneratedNumbers.some((g) => g === val)) {
+              wrongScales++;
+              continue;
+            }
             let firstValue;
             let shifted = 0;
             do {
               firstValue = preGeneratedNumbers.shift();
               shifted++;
-            } while (
-              cell.val() !== "" &&
-              preGeneratedNumbers.length > 0 &&
-              firstValue !== Number(cell.val())
-            );
+            } while (preGeneratedNumbers.length > 0 && firstValue !== val);
 
             numbersSkipped += shifted - 1;
 
-            if (firstValue === Number(cell.val())) {
+            if (firstValue === val) {
               cell.addClass("bg-success").addClass("text-light");
-              correctNumbers++;
+              correctScales++;
             }
           }
 
           for (const g of gridAnswers) {
+            if (!preGeneratedTexts.some((t) => t === g)) {
+              wrongGrids++;
+              continue;
+            }
             const cell = $(`.grid-cell[data-text="${g}"]`);
             let firstValue;
             let shifted = 0;
@@ -341,7 +356,9 @@
           }
 
           showAlert(
-            `Correct Scale: ${correctNumbers}<br />Skipped Scale: ${numbersSkipped}<br /><br />Correct Grid: ${correctGrids}<br />Skipped Grid: ${gridsSkipped}`
+            `Correct Math: ${correctMath}<br />Wrong Math: ${wrongMath}<br /><br />
+            Correct Scale: ${correctScales}<br />Wrong Scale: ${wrongScales}<br />Skipped Scale: ${numbersSkipped}<br /><br />
+            Correct Grid: ${correctGrids}<br />Wrong Grid: ${wrongGrids}<br />Skipped Grid: ${gridsSkipped}`
           );
         });
       });
