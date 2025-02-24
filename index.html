@@ -549,7 +549,7 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
       $("#btn-copy").click(function () {
         var currentUrl = window.location.href;
         // Replace "index.html" with "answer.html" if it exists.
-        var newUrl = currentUrl.replace("index.html", "answer.html");
+        var newUrl = currentUrl.replace("?q=", "answer.html?q=");
         // Use the Clipboard API (if available)
         if (navigator.clipboard) {
           navigator.clipboard.writeText(newUrl).then(
