@@ -286,6 +286,8 @@
         });
 
         $("#submit-btn").click(function () {
+          let clonedPreGeneratedNumbers = _.clone(preGeneratedNumbers);
+          let clonedPreGeneratedTexts = _.clone(preGeneratedTexts);
           let scalesSkipped = 0;
           let gridsSkipped = 0;
           let correctScales = 0;
@@ -313,16 +315,19 @@
               continue;
             }
             const val = Number(cell.val());
-            if (!preGeneratedNumbers.some((g) => g === val)) {
+            if (!clonedPreGeneratedNumbers.some((g) => g === val)) {
               wrongScales++;
               continue;
             }
             let firstValue;
             let shifted = 0;
             do {
-              firstValue = preGeneratedNumbers.shift();
+              firstValue = clonedPreGeneratedNumbers.shift();
               shifted++;
-            } while (preGeneratedNumbers.length > 0 && firstValue !== val);
+            } while (
+              clonedPreGeneratedNumbers.length > 0 &&
+              firstValue !== val
+            );
 
             scalesSkipped += shifted - 1;
 
@@ -333,7 +338,7 @@
           }
 
           for (const g of gridAnswers) {
-            if (!preGeneratedTexts.some((t) => t === g)) {
+            if (!clonedPreGeneratedTexts.some((t) => t === g)) {
               wrongGrids++;
               continue;
             }
@@ -341,9 +346,9 @@
             let firstValue;
             let shifted = 0;
             do {
-              firstValue = preGeneratedTexts.shift();
+              firstValue = clonedPreGeneratedTexts.shift();
               shifted++;
-            } while (preGeneratedTexts.length > 0 && firstValue !== g);
+            } while (clonedPreGeneratedTexts.length > 0 && firstValue !== g);
 
             gridsSkipped += shifted - 1;
 
